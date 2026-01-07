@@ -80,15 +80,8 @@ function Attendance() {
   };
 
   const getStatusLabel = (status: number) => {
-    const statusMap: Record<number, string> = {
-      0: 'Check-In',
-      1: 'Check-Out',
-      2: 'Break-Out',
-      3: 'Break-In',
-      4: 'OT-In',
-      5: 'OT-Out',
-    };
-    return statusMap[status] || `Status ${status}`;
+    // Just show "Punch" - let the server determine check-in/check-out logic
+    return 'Punch';
   };
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -190,7 +183,7 @@ function Attendance() {
                       Timestamp
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
+                      Type
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Synced
@@ -213,15 +206,7 @@ function Attendance() {
                         {new Date(record.timestamp).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            record.status === 0
-                              ? 'bg-green-100 text-green-800'
-                              : record.status === 1
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
                           {getStatusLabel(record.status)}
                         </span>
                       </td>

@@ -72,16 +72,15 @@ function createWindow(): void {
 function createTray(): void {
   // Create tray icon (use a simple icon)
   const iconPath = path.join(__dirname, '../../assets/tray-icon.png');
-  let trayIcon: nativeImage;
+  let trayIcon = nativeImage.createEmpty();
 
   try {
-    trayIcon = nativeImage.createFromPath(iconPath);
-    if (trayIcon.isEmpty()) {
-      // Create a simple colored icon if file doesn't exist
-      trayIcon = nativeImage.createEmpty();
+    const loadedIcon = nativeImage.createFromPath(iconPath);
+    if (!loadedIcon.isEmpty()) {
+      trayIcon = loadedIcon;
     }
   } catch {
-    trayIcon = nativeImage.createEmpty();
+    // Use empty icon if file doesn't exist
   }
 
   tray = new Tray(trayIcon);
