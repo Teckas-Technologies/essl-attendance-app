@@ -33,7 +33,7 @@ function createWindow(): void {
     height: 800,
     minWidth: 800,
     minHeight: 600,
-    title: 'ESSL Attendance',
+    title: 'Payrollcare',
     icon: path.join(__dirname, '../../assets/icon.png'),
     webPreferences: {
       nodeIntegration: false,
@@ -128,7 +128,7 @@ function createTray(): void {
     },
   ]);
 
-  tray.setToolTip('ESSL Attendance');
+  tray.setToolTip('Payrollcare');
   tray.setContextMenu(contextMenu);
 
   tray.on('double-click', () => {

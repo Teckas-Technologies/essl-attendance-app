@@ -222,6 +222,18 @@ app.post('/api/attendance/mark-synced', (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Delete all attendance records
+ */
+app.delete('/api/attendance', (_req: Request, res: Response) => {
+  try {
+    const count = db.clearAttendance();
+    res.json({ success: true, message: `Deleted ${count} records` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: (err as Error).message });
+  }
+});
+
 // ==================== Stats ====================
 
 /**

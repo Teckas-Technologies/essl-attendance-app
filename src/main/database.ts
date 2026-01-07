@@ -317,6 +317,13 @@ class DatabaseManager {
     this.save();
   }
 
+  clearAttendance(): number {
+    const count = this.data.attendance.length;
+    this.data.attendance = [];
+    this.save();
+    return count;
+  }
+
   // ==================== Sync Log Operations ====================
 
   addSyncLog(log: Omit<SyncLog, 'id' | 'createdAt'>): void {

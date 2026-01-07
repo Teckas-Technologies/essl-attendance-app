@@ -1,7 +1,7 @@
 {
-  "name": "essl-attendance-app",
+  "name": "payrollcare",
   "version": "1.0.0",
-  "description": "Desktop app to pull attendance data from ESSL/ZKTeco devices",
+  "description": "Desktop app to pull attendance data from ESSL/ZKTeco devices for Payrollcare",
   "main": "dist/main/index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
@@ -41,8 +41,8 @@
     "zklib": "^0.2.11"
   },
   "build": {
-    "appId": "com.teckas.essl-attendance",
-    "productName": "ESSL Attendance",
+    "appId": "com.teckas.payrollcare",
+    "productName": "Payrollcare",
     "directories": {
       "output": "release"
     },
