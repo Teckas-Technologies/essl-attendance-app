@@ -50,12 +50,14 @@ function createWindow(): void {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
 
-  // Handle close to tray
+  // Handle window close - actually close the app on Windows
   mainWindow.on('close', (event) => {
-    if (!isQuitting) {
+    if (!isQuitting && process.platform === 'darwin') {
+      // Only hide to tray on macOS
       event.preventDefault();
       mainWindow?.hide();
     }
+    // On Windows/Linux, let the window close normally
   });
 
   mainWindow.on('closed', () => {
@@ -303,6 +305,11 @@ async function cleanup(): Promise<void> {
   scheduler.stop();
   await stopApiServer();
   db.close();
+
+  // Force exit after cleanup to release all ports
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);
 }
 
 // ==================== App Events ====================
@@ -326,8 +333,10 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
+  // On Windows/Linux, quit when all windows are closed
   if (process.platform !== 'darwin') {
-    // Don't quit on Windows/Linux, stay in tray
+    isQuitting = true;
+    app.quit();
   }
 });
 

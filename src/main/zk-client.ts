@@ -33,19 +33,29 @@ export interface UserInfo {
   cardNo: string;
 }
 
+// Use incrementing port to avoid EADDRINUSE
+let portCounter = 5200;
+function getNextPort(): number {
+  portCounter++;
+  if (portCounter > 5300) portCounter = 5201;
+  return portCounter;
+}
+
 export class ZKClient {
   private device: any;
   private ip: string;
   private port: number;
+  private inport: number;
   private connected: boolean = false;
 
   constructor(ip: string, port: number = 4370, timeout: number = 10000) {
     this.ip = ip;
     this.port = port;
+    this.inport = getNextPort();
     this.device = new ZKLib({
       ip: ip,
       port: port,
-      inport: 5200,
+      inport: this.inport,
       timeout: timeout,
     });
   }
@@ -85,23 +95,13 @@ export class ZKClient {
    * Get device info
    */
   async getDeviceInfo(): Promise<DeviceInfo> {
-    return new Promise((resolve) => {
-      const info: DeviceInfo = {
-        serialNumber: '',
-        platform: '',
-        firmware: '',
-        macAddress: '',
-      };
-
-      // zklib doesn't have a direct getDeviceInfo, return basic info
-      this.device.getInfo((err: any, data: any) => {
-        if (!err && data) {
-          info.serialNumber = data.serialNumber || '';
-          info.firmware = data.firmwareVersion || '';
-        }
-        resolve(info);
-      });
-    });
+    // zklib doesn't have getInfo method, return connected status
+    return {
+      serialNumber: 'Connected',
+      platform: this.ip,
+      firmware: '',
+      macAddress: '',
+    };
   }
 
   /**

@@ -244,6 +244,12 @@ class Scheduler {
         info,
       };
     } catch (err) {
+      // Ensure cleanup even on error
+      try {
+        await client.disconnect();
+      } catch {
+        // Ignore disconnect errors
+      }
       return {
         success: false,
         error: (err as Error).message,
