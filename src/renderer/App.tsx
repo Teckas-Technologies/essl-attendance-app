@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
+import { HashRouter, Routes, Route, NavLink } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import Devices from './components/Devices';
 import Attendance from './components/Attendance';
@@ -53,12 +53,12 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div className="flex h-screen bg-gray-100">
         {/* Sidebar */}
         <aside className="w-64 bg-gray-800 text-white flex flex-col">
           <div className="p-4 border-b border-gray-700">
-            <h1 className="text-xl font-bold">ESSL Attendance</h1>
+            <h1 className="text-xl font-bold">Payrollcare</h1>
             <p className="text-sm text-gray-400 mt-1">Device Manager</p>
           </div>
 
@@ -184,7 +184,7 @@ function App() {
           </Routes>
         </main>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
