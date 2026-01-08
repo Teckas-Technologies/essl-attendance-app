@@ -1,7 +1,7 @@
 {
   "name": "payrollcare",
   "version": "1.0.0",
-  "description": "Desktop app to pull attendance data from ESSL/ZKTeco devices for Payrollcare",
+  "description": "Desktop app to pull attendance data from ZKTeco biometric devices for Payroll Care",
   "main": "dist/main/index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
@@ -42,7 +42,7 @@
   },
   "build": {
     "appId": "com.teckas.payrollcare",
-    "productName": "Payrollcare",
+    "productName": "Payroll Care",
     "directories": {
       "output": "release"
     },

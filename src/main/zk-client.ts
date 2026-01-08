@@ -1,6 +1,6 @@
 /**
  * ZKTeco Client Wrapper
- * Uses zklib for reliable communication with ESSL/ZKTeco devices
+ * Uses zklib for reliable communication with ZKTeco biometric devices
  */
 
 // @ts-ignore - zklib doesn't have TypeScript definitions

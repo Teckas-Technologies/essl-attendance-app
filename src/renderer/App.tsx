@@ -56,10 +56,21 @@ function App() {
     <HashRouter>
       <div className="flex h-screen bg-gray-100">
         {/* Sidebar */}
-        <aside className="w-64 bg-gray-800 text-white flex flex-col">
-          <div className="p-4 border-b border-gray-700">
-            <h1 className="text-xl font-bold">Payrollcare</h1>
-            <p className="text-sm text-gray-400 mt-1">Device Manager</p>
+        <aside className="w-64 bg-emerald-700 text-white flex flex-col">
+          <div className="p-4 border-b border-emerald-600">
+            <div className="flex items-center gap-3">
+              {/* Payroll Care Logo */}
+              <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="45" stroke="white" strokeWidth="4" fill="none"/>
+                <path d="M35 25h20c11 0 20 9 20 20s-9 20-20 20H45v15H35V25z" fill="white"/>
+                <circle cx="55" cy="45" r="8" fill="#059669"/>
+                <path d="M52 42c3-3 8-3 11 0" stroke="#059669" strokeWidth="2" fill="none"/>
+              </svg>
+              <div>
+                <h1 className="text-xl font-bold">Payroll Care</h1>
+                <p className="text-sm text-emerald-200">Device Manager</p>
+              </div>
+            </div>
           </div>
 
           <nav className="flex-1 p-4">
@@ -69,7 +80,7 @@ function App() {
                   to="/"
                   className={({ isActive }) =>
                     `block px-4 py-2 rounded transition-colors ${
-                      isActive ? 'bg-blue-600' : 'hover:bg-gray-700'
+                      isActive ? 'bg-emerald-900' : 'hover:bg-emerald-600'
                     }`
                   }
                 >
@@ -81,7 +92,7 @@ function App() {
                   to="/devices"
                   className={({ isActive }) =>
                     `block px-4 py-2 rounded transition-colors ${
-                      isActive ? 'bg-blue-600' : 'hover:bg-gray-700'
+                      isActive ? 'bg-emerald-900' : 'hover:bg-emerald-600'
                     }`
                   }
                 >
@@ -93,7 +104,7 @@ function App() {
                   to="/attendance"
                   className={({ isActive }) =>
                     `block px-4 py-2 rounded transition-colors ${
-                      isActive ? 'bg-blue-600' : 'hover:bg-gray-700'
+                      isActive ? 'bg-emerald-900' : 'hover:bg-emerald-600'
                     }`
                   }
                 >
@@ -105,7 +116,7 @@ function App() {
                   to="/settings"
                   className={({ isActive }) =>
                     `block px-4 py-2 rounded transition-colors ${
-                      isActive ? 'bg-blue-600' : 'hover:bg-gray-700'
+                      isActive ? 'bg-emerald-900' : 'hover:bg-emerald-600'
                     }`
                   }
                 >
@@ -116,15 +127,15 @@ function App() {
           </nav>
 
           {/* Sync Status */}
-          <div className="p-4 border-t border-gray-700">
+          <div className="p-4 border-t border-emerald-600">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-gray-400">Scheduler</span>
+              <span className="text-sm text-emerald-200">Scheduler</span>
               <button
                 onClick={toggleScheduler}
                 className={`px-3 py-1 rounded text-xs ${
                   schedulerStatus.isRunning
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-gray-600 hover:bg-gray-500'
+                    ? 'bg-emerald-500 hover:bg-emerald-400'
+                    : 'bg-emerald-900 hover:bg-emerald-800'
                 }`}
               >
                 {schedulerStatus.isRunning ? 'Running' : 'Stopped'}
@@ -136,8 +147,8 @@ function App() {
               disabled={schedulerStatus.isSyncing}
               className={`w-full py-2 px-4 rounded font-medium transition-colors ${
                 schedulerStatus.isSyncing
-                  ? 'bg-gray-600 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700'
+                  ? 'bg-emerald-900 cursor-not-allowed'
+                  : 'bg-white text-emerald-700 hover:bg-emerald-50'
               }`}
             >
               {schedulerStatus.isSyncing ? (
@@ -168,7 +179,7 @@ function App() {
               )}
             </button>
 
-            <p className="text-xs text-gray-500 mt-2 text-center">
+            <p className="text-xs text-emerald-200 mt-2 text-center">
               Interval: {schedulerStatus.intervalMs / 1000 / 60} min
             </p>
           </div>

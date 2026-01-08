@@ -33,7 +33,7 @@ function createWindow(): void {
     height: 800,
     minWidth: 800,
     minHeight: 600,
-    title: 'Payrollcare',
+    title: 'Payroll Care',
     icon: path.join(__dirname, '../../assets/icon.png'),
     webPreferences: {
       nodeIntegration: false,
@@ -130,7 +130,7 @@ function createTray(): void {
     },
   ]);
 
-  tray.setToolTip('Payrollcare');
+  tray.setToolTip('Payroll Care');
   tray.setContextMenu(contextMenu);
 
   tray.on('double-click', () => {

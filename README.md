@@ -1,6 +1,6 @@
-# Payrollcare
+# Payroll Care
 
-Desktop application to pull attendance punch data from ESSL/ZKTeco biometric devices via TCP and expose it through a REST API for server integration.
+Desktop application to pull attendance punch data from ZKTeco biometric devices via TCP and expose it through a REST API for server integration.
 
 ## Features
 
