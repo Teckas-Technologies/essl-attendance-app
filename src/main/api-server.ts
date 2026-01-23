@@ -6,18 +6,101 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { db } from './database';
 import { Server } from 'http';
+import Store from 'electron-store';
 
 const app = express();
 let server: Server | null = null;
 
+// Get settings store reference
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let settingsStore: Store<any> | null = null;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function setSettingsStore(store: Store<any>): void {
+  settingsStore = store;
+}
+
+// Type for cloud login response
+interface CloudLoginResponse {
+  token: string;
+  user: {
+    id: string;
+    name: string;
+    emailId: string;
+    role: string[];
+    isKeyUser: boolean;
+    isAuditUser: boolean;
+    autoLogoutMinutes: number;
+    factories: Array<{
+      id: string;
+      factoryName: string;
+      factoryCode: string;
+      organization: {
+        companyName: string;
+        companyCode: string;
+      };
+    }>;
+  };
+  message?: string;
+}
+
+// Session storage for authenticated user
+interface UserSession {
+  user: {
+    id: string;
+    name: string;
+    emailId: string;
+    role: string[];
+    isKeyUser: boolean;
+    isAuditUser: boolean;
+    autoLogoutMinutes: number;
+    factories: Array<{
+      id: string;
+      factoryName: string;
+      factoryCode: string;
+      organization: {
+        companyName: string;
+        companyCode: string;
+      };
+    }>;
+  } | null;
+  token: string | null;
+}
+
+let currentSession: UserSession = {
+  user: null,
+  token: null,
+};
+
+// Export session management for IPC
+export function getSession(): UserSession {
+  return currentSession;
+}
+
+export function setSession(session: UserSession): void {
+  currentSession = session;
+}
+
+export function clearSession(): void {
+  currentSession = { user: null, token: null };
+}
+
 // Middleware
 app.use(express.json());
+
+// Handle OPTIONS preflight requests
+app.options('*', (_req: Request, res: Response) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-API-Key');
+  res.sendStatus(200);
+});
 
 // CORS middleware for cloud server access
 app.use((_req: Request, res: Response, next: NextFunction) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-API-Key');
   next();
 });
 
@@ -27,6 +110,44 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
   next();
 });
 
+// ==================== Authentication Middleware ====================
+
+/**
+ * Validate API Key from X-API-Key header
+ * Used for cloud backend sync requests
+ */
+function validateApiKey(req: Request, res: Response, next: NextFunction): void {
+  const apiKey = req.headers['x-api-key'] as string;
+  const validKey = settingsStore?.get('cloudApiKey') as string | undefined;
+
+  if (!apiKey) {
+    res.status(401).json({
+      success: false,
+      error: 'API key required. Provide X-API-Key header.',
+    });
+    return;
+  }
+
+  if (!validKey) {
+    res.status(503).json({
+      success: false,
+      error: 'API key not configured. Please configure the cloud API key in settings.',
+    });
+    return;
+  }
+
+  if (apiKey !== validKey) {
+    res.status(403).json({
+      success: false,
+      error: 'Invalid API key',
+    });
+    return;
+  }
+
+  (req as any).authType = 'api-key';
+  next();
+}
+
 // ==================== Health Check ====================
 
 app.get('/api/health', (_req: Request, res: Response) => {
@@ -34,6 +155,104 @@ app.get('/api/health', (_req: Request, res: Response) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
+  });
+});
+
+// ==================== Authentication Routes ====================
+
+/**
+ * Login via Cloud Backend
+ */
+app.post('/api/auth/login', async (req: Request, res: Response) => {
+  const { emailId, password } = req.body;
+
+  if (!emailId || !password) {
+    res.status(400).json({
+      success: false,
+      error: 'Email and password are required',
+    });
+    return;
+  }
+
+  const cloudUrl = settingsStore?.get('cloudBackendUrl') as string | undefined;
+  if (!cloudUrl) {
+    res.status(503).json({
+      success: false,
+      error: 'Cloud backend URL not configured. Please configure it in settings.',
+    });
+    return;
+  }
+
+  try {
+    const response = await fetch(`${cloudUrl}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emailId, password }),
+    });
+
+    const data = (await response.json()) as CloudLoginResponse;
+
+    if (!response.ok) {
+      res.status(response.status).json({
+        success: false,
+        error: data.message || 'Login failed',
+      });
+      return;
+    }
+
+    // Store session
+    currentSession.token = data.token;
+    currentSession.user = data.user;
+
+    console.log(`[Auth] User logged in: ${data.user.name}`);
+
+    res.json({
+      success: true,
+      user: {
+        id: data.user.id,
+        name: data.user.name,
+        emailId: data.user.emailId,
+        role: data.user.role,
+        isKeyUser: data.user.isKeyUser,
+        isAuditUser: data.user.isAuditUser,
+        factories: data.user.factories,
+      },
+    });
+  } catch (error) {
+    console.error('[Auth] Login error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to connect to authentication server',
+    });
+  }
+});
+
+/**
+ * Logout
+ */
+app.post('/api/auth/logout', (_req: Request, res: Response) => {
+  const userName = currentSession.user?.name;
+  currentSession = { user: null, token: null };
+  console.log(`[Auth] User logged out: ${userName}`);
+  res.json({ success: true, message: 'Logged out successfully' });
+});
+
+/**
+ * Get auth status
+ */
+app.get('/api/auth/status', (_req: Request, res: Response) => {
+  res.json({
+    success: true,
+    isAuthenticated: currentSession.token !== null,
+    user: currentSession.user
+      ? {
+          id: currentSession.user.id,
+          name: currentSession.user.name,
+          emailId: currentSession.user.emailId,
+          role: currentSession.user.role,
+          factories: currentSession.user.factories,
+        }
+      : null,
   });
 });
 
@@ -174,10 +393,10 @@ app.get('/api/attendance', (req: Request, res: Response) => {
 });
 
 /**
- * Get attendance for cloud sync
+ * Get attendance for cloud sync (Protected with API Key)
  * Returns unsynced records since a given timestamp
  */
-app.get('/api/attendance/sync', (req: Request, res: Response) => {
+app.get('/api/attendance/sync', validateApiKey, (req: Request, res: Response) => {
   try {
     const { since, limit = '1000' } = req.query;
 
@@ -203,10 +422,10 @@ app.get('/api/attendance/sync', (req: Request, res: Response) => {
 });
 
 /**
- * Mark attendance as synced to cloud
+ * Mark attendance as synced to cloud (Protected with API Key)
  * Body: { ids: number[] }
  */
-app.post('/api/attendance/mark-synced', (req: Request, res: Response) => {
+app.post('/api/attendance/mark-synced', validateApiKey, (req: Request, res: Response) => {
   try {
     const { ids } = req.body;
 

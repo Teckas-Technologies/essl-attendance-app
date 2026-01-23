@@ -6,7 +6,7 @@
 import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, dialog } from 'electron';
 import path from 'path';
 import { db } from './database';
-import { startApiServer, stopApiServer } from './api-server';
+import { startApiServer, stopApiServer, setSettingsStore, getSession, clearSession } from './api-server';
 import { scheduler } from './scheduler';
 import Store from 'electron-store';
 
@@ -17,8 +17,13 @@ const store = new Store({
     pollInterval: 5, // minutes
     startMinimized: false,
     autoStart: false,
+    cloudBackendUrl: '', // Cloud backend URL for user authentication
+    cloudApiKey: '', // API key for sync authentication
   },
 });
+
+// Pass store to API server for cloud config access
+setSettingsStore(store);
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -229,6 +234,8 @@ function setupIPC(): void {
       pollInterval: store.get('pollInterval'),
       startMinimized: store.get('startMinimized'),
       autoStart: store.get('autoStart'),
+      cloudBackendUrl: store.get('cloudBackendUrl'),
+      cloudApiKey: store.get('cloudApiKey'),
     };
   });
 
@@ -252,7 +259,80 @@ function setupIPC(): void {
       store.set('autoStart', settings.autoStart);
       app.setLoginItemSettings({ openAtLogin: settings.autoStart });
     }
+    if (settings.cloudBackendUrl !== undefined) {
+      store.set('cloudBackendUrl', settings.cloudBackendUrl);
+    }
+    if (settings.cloudApiKey !== undefined) {
+      store.set('cloudApiKey', settings.cloudApiKey);
+    }
     return { success: true };
+  });
+
+  // ==================== Authentication Operations ====================
+
+  // Type for cloud login response
+  interface CloudLoginResponse {
+    token: string;
+    user: {
+      id: string;
+      name: string;
+      emailId: string;
+      role: string[];
+      isKeyUser: boolean;
+      isAuditUser: boolean;
+      autoLogoutMinutes: number;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      factories: any[];
+    };
+    message?: string;
+  }
+
+  ipcMain.handle('auth-login', async (_event, credentials: { emailId: string; password: string }) => {
+    const cloudUrl = store.get('cloudBackendUrl') as string;
+    if (!cloudUrl) {
+      return { success: false, error: 'Cloud backend URL not configured' };
+    }
+
+    try {
+      const response = await fetch(`${cloudUrl}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
+
+      const data = (await response.json()) as CloudLoginResponse;
+
+      if (!response.ok) {
+        return { success: false, error: data.message || 'Login failed' };
+      }
+
+      console.log(`[Auth] User logged in: ${data.user.name}`);
+
+      return {
+        success: true,
+        user: data.user,
+        token: data.token,
+      };
+    } catch (error) {
+      console.error('[Auth] Login error:', error);
+      return { success: false, error: 'Failed to connect to authentication server' };
+    }
+  });
+
+  ipcMain.handle('auth-logout', () => {
+    const session = getSession();
+    const userName = session.user?.name;
+    clearSession();
+    console.log(`[Auth] User logged out: ${userName}`);
+    return { success: true };
+  });
+
+  ipcMain.handle('auth-status', () => {
+    const session = getSession();
+    return {
+      isAuthenticated: session.token !== null,
+      user: session.user,
+    };
   });
 
   // ==================== Window Operations ====================

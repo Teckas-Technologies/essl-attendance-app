@@ -55,6 +55,41 @@ export interface Settings {
   pollInterval: number;
   startMinimized: boolean;
   autoStart: boolean;
+  cloudBackendUrl: string;
+  cloudApiKey: string;
+}
+
+export interface Factory {
+  id: string;
+  factoryName: string;
+  factoryCode: string;
+  organization: {
+    companyName: string;
+    companyCode: string;
+  };
+}
+
+export interface User {
+  id: string;
+  name: string;
+  emailId: string;
+  role: string[];
+  isKeyUser?: boolean;
+  isAuditUser?: boolean;
+  autoLogoutMinutes?: number;
+  factories?: Factory[];
+}
+
+export interface AuthStatus {
+  isAuthenticated: boolean;
+  user: User | null;
+}
+
+export interface LoginResult {
+  success: boolean;
+  user?: User;
+  token?: string;
+  error?: string;
 }
 
 export interface SchedulerStatus {
@@ -94,6 +129,11 @@ export interface ElectronAPI {
   // Settings
   getSettings: () => Promise<Settings>;
   saveSettings: (settings: Partial<Settings>) => Promise<{ success: boolean }>;
+
+  // Authentication
+  login: (credentials: { emailId: string; password: string }) => Promise<LoginResult>;
+  logout: () => Promise<{ success: boolean }>;
+  getAuthStatus: () => Promise<AuthStatus>;
 
   // Window operations
   minimizeToTray: () => Promise<{ success: boolean }>;

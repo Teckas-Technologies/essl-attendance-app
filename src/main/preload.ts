@@ -37,6 +37,11 @@ const electronAPI = {
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),
 
+  // ==================== Authentication ====================
+  login: (credentials: { emailId: string; password: string }) => ipcRenderer.invoke('auth-login', credentials),
+  logout: () => ipcRenderer.invoke('auth-logout'),
+  getAuthStatus: () => ipcRenderer.invoke('auth-status'),
+
   // ==================== Window Operations ====================
   minimizeToTray: () => ipcRenderer.invoke('minimize-to-tray'),
   showMessage: (options: { type: string; title: string; message: string }) =>

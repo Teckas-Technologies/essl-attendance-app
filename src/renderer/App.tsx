@@ -4,7 +4,8 @@ import Dashboard from './components/Dashboard';
 import Devices from './components/Devices';
 import Attendance from './components/Attendance';
 import Settings from './components/Settings';
-import { SchedulerStatus } from './types';
+import Login from './components/Login';
+import { SchedulerStatus, User } from './types';
 
 function App() {
   const [schedulerStatus, setSchedulerStatus] = useState<SchedulerStatus>({
@@ -12,8 +13,13 @@ function App() {
     isSyncing: false,
     intervalMs: 300000,
   });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
+    // Check authentication status on mount
+    checkAuthStatus();
+
     // Load initial scheduler status
     loadSchedulerStatus();
 
@@ -33,6 +39,32 @@ function App() {
     };
   }, []);
 
+  const checkAuthStatus = async () => {
+    try {
+      const status = await window.electronAPI.getAuthStatus();
+      setIsAuthenticated(status.isAuthenticated);
+      setCurrentUser(status.user);
+    } catch (err) {
+      console.error('Error checking auth status:', err);
+      setIsAuthenticated(false);
+    }
+  };
+
+  const handleLoginSuccess = (user: User) => {
+    setCurrentUser(user);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await window.electronAPI.logout();
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+    } catch (err) {
+      console.error('Error logging out:', err);
+    }
+  };
+
   const loadSchedulerStatus = async () => {
     const status = await window.electronAPI.getSchedulerStatus();
     setSchedulerStatus(status);
@@ -51,6 +83,20 @@ function App() {
     }
     loadSchedulerStatus();
   };
+
+  // Show loading state while checking auth
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-600 to-emerald-800 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+      </div>
+    );
+  }
+
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <HashRouter>
@@ -72,6 +118,21 @@ function App() {
               </div>
             </div>
           </div>
+
+          {/* User Info */}
+          {currentUser && (
+            <div className="p-4 border-b border-emerald-600">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-sm font-medium">
+                  {currentUser.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{currentUser.name}</p>
+                  <p className="text-xs text-emerald-200 truncate">{currentUser.emailId}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <nav className="flex-1 p-4">
             <ul className="space-y-2">
@@ -182,6 +243,14 @@ function App() {
             <p className="text-xs text-emerald-200 mt-2 text-center">
               Interval: {schedulerStatus.intervalMs / 1000 / 60} min
             </p>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="w-full mt-3 py-2 px-4 rounded font-medium text-sm transition-colors bg-emerald-900 hover:bg-emerald-800 text-emerald-200"
+            >
+              Sign Out
+            </button>
           </div>
         </aside>
 
