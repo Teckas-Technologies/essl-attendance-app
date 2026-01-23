@@ -82,7 +82,43 @@ class DatabaseManager {
       // Load existing data if file exists
       if (fs.existsSync(this.dbPath)) {
         const fileContent = fs.readFileSync(this.dbPath, 'utf-8');
-        this.data = JSON.parse(fileContent);
+
+        // Handle empty or corrupted file
+        if (!fileContent || fileContent.trim() === '') {
+          console.warn('Database file is empty, initializing with defaults');
+          this.saveSync();
+        } else {
+          try {
+            const parsedData = JSON.parse(fileContent);
+            // Validate the data structure has required fields
+            if (parsedData && typeof parsedData === 'object') {
+              this.data = {
+                devices: Array.isArray(parsedData.devices) ? parsedData.devices : [],
+                attendance: Array.isArray(parsedData.attendance) ? parsedData.attendance : [],
+                syncLogs: Array.isArray(parsedData.syncLogs) ? parsedData.syncLogs : [],
+                counters: {
+                  deviceId: parsedData.counters?.deviceId || 0,
+                  attendanceId: parsedData.counters?.attendanceId || 0,
+                  syncLogId: parsedData.counters?.syncLogId || 0,
+                },
+              };
+            } else {
+              console.warn('Database file has invalid structure, initializing with defaults');
+              this.saveSync();
+            }
+          } catch (parseError) {
+            console.warn('Database file is corrupted, backing up and initializing with defaults');
+            // Backup the corrupted file
+            const backupPath = this.dbPath + '.backup.' + Date.now();
+            try {
+              fs.copyFileSync(this.dbPath, backupPath);
+              console.log('Corrupted database backed up to:', backupPath);
+            } catch {
+              // Ignore backup errors
+            }
+            this.saveSync();
+          }
+        }
       } else {
         // Save initial empty database
         this.saveSync();

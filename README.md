@@ -40,14 +40,7 @@ npm start
 
 Before using the application, you must configure the cloud integration settings.
 
-### Step 1: Configure Cloud Backend URL
-
-1. Open the app and go to **Settings**
-2. In the **Cloud Integration** section, enter your **Cloud Backend URL**:
-   - Production: `https://your-payroll-care-server.com`
-   - Development: `http://localhost:4000`
-
-### Step 2: Register This Server in Cloud Backend
+### Step 1: Register This Server in Cloud Backend
 
 1. In the Payroll Care cloud admin panel, go to **Attendance Sync > Servers**
 2. Click **Create Sync Server** and enter:
@@ -60,17 +53,23 @@ Before using the application, you must configure the cloud integration settings.
 
 > **Important:** The full API key is only shown once during creation. Copy it immediately!
 
-### Step 3: Configure API Key
+### Step 2: Configure Cloud Settings (on Login Page)
 
-1. Back in the Payroll Care desktop app **Settings**
-2. Paste the API key in the **Cloud API Key** field
-3. Click **Save Settings**
+1. Open the app - you'll see the login screen
+2. Click the **gear icon** (top-right corner) or **"Configure cloud settings"** link
+3. In the settings modal, enter:
+   - **Cloud Backend URL**: `https://your-payroll-care-server.com` (or `http://localhost:4000` for dev)
+   - **Cloud API Key**: Paste the API key from Step 1
+4. Click **Save Settings**
 
-### Step 4: Login
+> **Security Note:** The API key is masked when you reopen the settings modal. Leave the field blank to keep the existing key, or enter a new key to replace it.
 
-1. The app will show a login screen
-2. Enter your Payroll Care cloud credentials (email and password)
-3. Click **Sign In**
+### Step 3: Login
+
+1. Enter your Payroll Care cloud credentials (email and password)
+2. Click **Sign In**
+
+You can also modify cloud settings later from the **Settings** page after logging in.
 
 ---
 
